@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Become a Rider | ঠেকাও{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #22c55e;
+        --primary-hover: #16a34a;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+    }
+
+    .registration-section {
+        min-height: 100vh;
+        padding: 60px 0;
+        background: radial-gradient(circle at top right, #f8fafc, #f1f5f9);
+    }
+
+    .registration-card {
+        max-width: 800px;
+        margin: auto;
+        background: var(--card);
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 48px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, .05);
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 40px
+    }
+
+    .header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text)
+    }
+
+    .header p {
+        color: var(--muted)
+    }
+
+    .benefits {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 40px;
+    }
+
+    .benefit {
+        background: #f8fafc;
+        border: 1px solid #f1f5f9;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    @media(max-width:640px) {
+        .form-grid {
+            grid-template-columns: 1fr
+        }
+    }
+
+    .form-group {
+        margin-bottom: 20px
+    }
+
+    .form-group.full {
+        grid-column: span 2
+    }
+
+    @media(max-width:640px) {
+        .form-group.full {
+            grid-column: 1
+        }
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: block
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: #fff;
+    }
+
+    .service-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .service-option input {
+        display: none
+    }
+
+    .service-label {
+        padding: 14px;
+        text-align: center;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        background: #f8fafc;
+    }
+
+    .service-option input:checked+.service-label {
+        border-color: var(--primary);
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        background: var(--primary);
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 20px;
+    }
+
+    .submit-btn:hover {
+        background: var(--primary-hover)
+    }
+
+    .error-box {
+        background: #fee2e2;
+        border-left: 4px solid #ef4444;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .error-list {
+        margin: 0;
+        padding-left: 20px;
+        color: #ef4444;
+    }
+
+    .field-error {
+        color: #ef4444;
+        font-size: 13px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 14px;
+    }
+
+    .footer a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="registration-section">
+    <div class="registration-card">
+
+        <div class="header">
+            <h1>Become a Rider</h1>
+            <p>Start earning with flexible hours</p>
+        </div>
+
+        <div class="benefits">
+            <div class="benefit">💰 High Earnings</div>
+            <div class="benefit">⏰ Flexible Hours</div>
+            <div class="benefit">📱 Easy Dashboard</div>
+            <div class="benefit">🎁 Weekly Rewards</div>
+        </div>
+
+        {% if form.errors %}
+        <div class="error-box">
+            <p>Please fix the errors below:</p>
+            {% if form.non_field_errors %}
+            <ul class="error-list">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    {% for error in form.username.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    {% for error in form.password1.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    {% for error in form.password2.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}
+                    {% for error in form.phone_number.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Vehicle Type</label>
+                    {{ form.vehicle_type }}
+                    {% if form.vehicle_type.errors %}
+                    {% for error in form.vehicle_type.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group full">
+                    <label>Service Type</label>
+                    <div class="service-grid">
+                        {% for value, label in form.rider_type.field.choices %}
+                        <div class="service-option">
+                            <input type="radio" id="service_{{ forloop.counter }}" name="{{ form.rider_type.name }}"
+                                value="{{ value }}" {% if form.rider_type.value == value %}checked{% endif %}>
+                            <label class="service-label" for="service_{{ forloop.counter }}">
+                                {{ label }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if form.rider_type.errors %}
+                    {% for error in form.rider_type.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <button class="submit-btn" type="submit">Register as Rider</button>
+        </form>
+
+        <div class="footer">
+            Already registered?
+            <a href="{% url 'rider_login' %}">Sign in</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

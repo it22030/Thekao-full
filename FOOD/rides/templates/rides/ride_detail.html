@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% load l10n %}
+
+{% block title %}Ride Tracking | ঠেকাও{% endblock %}
+
+{% block content %}
+<style>
+    .tracking-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,.05);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        max-width: 600px;
+        margin: 40px auto;
+    }
+
+    .status-header {
+        background: #f8fafc;
+        padding: 24px;
+        text-align: center;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: capitalize;
+    }
+
+    .status-requested { background:#fff7ed; color:#ea580c; }
+    .status-accepted { background:#eff6ff; color:#2563eb; }
+    .status-in_progress { background:#f0fdf4; color:#16a34a; }
+    .status-completed { background:#f0fdf4; color:#16a34a; }
+    .status-cancelled { background:#fef2f2; color:#dc2626; }
+
+    .ride-info { padding: 32px; }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-label { color:#64748b; font-size:14px; font-weight:500; }
+    .info-value { font-weight:600; color:#0f172a; text-align:right; }
+
+    .driver-section {
+        background: #f8fafc;
+        padding: 20px;
+        border-radius: 16px;
+        margin-top: 24px;
+        display: none;
+    }
+
+    .driver-info { display:flex; align-items:center; gap:12px; }
+
+    .driver-avatar {
+        width:48px;
+        height:48px;
+        background:#bfdbfe;
+        color:#2563eb;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-weight:700;
+        font-size:20px;
+    }
+
+    #map {
+        height: 300px;
+        width: 100%;
+        border-radius: 16px;
+        margin-top: 24px;
+    }
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="container">
+    <div class="tracking-card">
+        <div class="status-header">
+            <h2>Ride #{{ ride.id }}</h2>
+            <span id="ride-status-badge" class="status-badge">
+                {{ ride.get_status_display }}
+            </span>
+        </div>
+
+        <div class="ride-info">
+            <div class="info-row">
+                <span class="info-label">Pickup</span>
+                <span class="info-value">{{ ride.pickup_address }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Destination</span>
+                <span class="info-value">{{ ride.dropoff_address }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Fare</span>
+                <span class="info-value">৳{{ ride.fare }}</span>
+            </div>
+
+            <!-- DRIVER SECTION -->
+            <div id="driver-section" class="driver-section" {% if ride.driver %}style="display:block"{% endif %}>
+                <div class="info-label">Your Driver</div>
+                <div class="driver-info">
+                    <div class="driver-avatar">
+                        {% if ride.driver %}
+                            {{ ride.driver.username|first|upper }}
+                        {% else %}
+                            ?
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div id="driver-name">
+                            {% if ride.driver %}
+                                {{ ride.driver.get_full_name|default:ride.driver.username }}
+                            {% else %}
+                                Waiting for driver
+                            {% endif %}
+                        </div>
+                        <div style="font-size:13px;color:#64748b;">Rating: 4.9 ★</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const rideId = {{ ride.id }};
+
+    const pickup = [
+        {{ ride.pickup_lat|default:23.8103|unlocalize }},
+        {{ ride.pickup_lng|default:90.4125|unlocalize }}
+    ];
+
+    const dropoff = [
+        {{ ride.dropoff_lat|default:23.8103|unlocalize }},
+        {{ ride.dropoff_lng|default:90.4125|unlocalize }}
+    ];
+
+    const map = L.map('map').setView(pickup, 13);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20
+    }).addTo(map);
+
+    L.marker(pickup).addTo(map).bindPopup("Pickup");
+    L.marker(dropoff).addTo(map).bindPopup("Dropoff");
+
+    const statusBadge = document.getElementById('ride-status-badge');
+    const driverSection = document.getElementById('driver-section');
+    const driverNameEl = document.getElementById('driver-name');
+    const driverAvatarEl = document.querySelector('.driver-avatar');
+
+    function updateStatusClass(status) {
+        statusBadge.className = 'status-badge';
+        const s = status.toLowerCase();
+        if (s.includes('requested')) statusBadge.classList.add('status-requested');
+        else if (s.includes('accepted')) statusBadge.classList.add('status-accepted');
+        else if (s.includes('progress')) statusBadge.classList.add('status-in_progress');
+        else if (s.includes('completed')) statusBadge.classList.add('status-completed');
+        else if (s.includes('cancelled')) statusBadge.classList.add('status-cancelled');
+    }
+
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${protocol}//${location.host}/ws/status/ride/${rideId}/`);
+
+    socket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        statusBadge.innerText = data.status;
+        updateStatusClass(data.status);
+
+        if (data.driver_name) {
+            driverSection.style.display = 'block';
+            driverNameEl.innerText = data.driver_name;
+            driverAvatarEl.innerText = data.driver_name.charAt(0).toUpperCase();
+        }
+    };
+
+    socket.onclose = function () {
+        console.error('Ride socket closed unexpectedly');
+    };
+
+    updateStatusClass(statusBadge.innerText);
+</script>
+{% endblock %}

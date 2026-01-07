@@ -1,0 +1,306 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load humanize %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+
+<style>
+    /* ===================== CSS VARIABLES ===================== */
+    :root {
+        --primary: #3b82f6;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --warning: #f59e0b;
+        --muted: #64748b;
+        --bg-card: #ffffff;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border-radius: 16px;
+        --box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        color: var(--text-main);
+        background: #f8fafc;
+    }
+
+    /* ===================== GRID ===================== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    /* ===================== STAT CARD ===================== */
+    .stat-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-card);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--muted);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 0.25rem;
+    }
+
+    .stat-meta {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .stat-meta.success { color: var(--success); }
+    .stat-meta.warning { color: var(--warning); }
+    .stat-meta.primary { color: var(--primary); }
+    .stat-meta.muted { color: var(--muted); }
+
+    .stat-icon {
+        font-size: 1.5rem;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #fff;
+    }
+
+    .bg-success { background: linear-gradient(135deg, #10b981, #059669); }
+    .bg-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .bg-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .bg-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+    /* ===================== CARDS ===================== */
+    .card {
+        background: var(--bg-card);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .link {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    /* ===================== TABLE ===================== */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.875rem;
+    }
+
+    th {
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 999px;
+        color: #fff;
+        text-transform: capitalize;
+    }
+
+    .badge-delivered { background: var(--success); }
+    .badge-cancelled { background: var(--danger); }
+    .badge-placed { background: var(--primary); }
+    .badge-other { background: var(--warning); }
+
+    .table-empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 2rem;
+    }
+
+    /* ===================== STATS LIST ===================== */
+    .stats-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .stats-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9375rem;
+    }
+
+    .stats-item strong.success { color: var(--success); }
+    .stats-item strong.danger { color: var(--danger); }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- ===================== STATS GRID ===================== -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div>
+            <div class="stat-label">Food Revenue</div>
+            <div class="stat-value">৳{{ total_revenue|floatformat:0|intcomma }}</div>
+            <div class="stat-meta success">
+                <i data-lucide="trending-up"></i> +12% this week
+            </div>
+        </div>
+        <div class="stat-icon bg-success">
+            <i data-lucide="dollar-sign"></i>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div>
+            <div class="stat-label">Active Drivers</div>
+            <div class="stat-value">{{ total_riders }}</div>
+            <div class="stat-meta warning">
+                <i data-lucide="activity"></i> Online now
+            </div>
+        </div>
+        <div class="stat-icon bg-warning">
+            <i data-lucide="car-taxi-front"></i>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div>
+            <div class="stat-label">Mall Orders</div>
+            <div class="stat-value">{{ total_mall_orders }}</div>
+            <div class="stat-meta primary">
+                <i data-lucide="shopping-bag"></i> Total placed
+            </div>
+        </div>
+        <div class="stat-icon bg-primary">
+            <i data-lucide="package"></i>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div>
+            <div class="stat-label">Parcel Requests</div>
+            <div class="stat-value">{{ total_parcels }}</div>
+            <div class="stat-meta muted">
+                <i data-lucide="box"></i> All time
+            </div>
+        </div>
+        <div class="stat-icon bg-purple">
+            <i data-lucide="truck"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MAIN GRID ===================== -->
+<div class="dashboard-grid">
+
+    <!-- Recent Orders -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Orders</h3>
+            <a href="{% url 'manage_orders' %}" class="link">View All</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>৳{{ order.total_price|intcomma }}</td>
+                    <td>
+                        <span class="badge {% if order.status == 'delivered' %}badge-delivered
+                            {% elif order.status == 'cancelled' %}badge-cancelled
+                            {% elif order.status == 'placed' %}badge-placed{% else %}badge-other{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at|date:"M d, H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="table-empty">No recent orders found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Platform Stats -->
+    <div class="card">
+        <h3 class="card-title">Platform Stats</h3>
+        <div class="stats-list">
+            <div class="stats-item">
+                <span>Restaurants</span>
+                <strong>{{ total_restaurants }}</strong>
+            </div>
+            <div class="stats-item">
+                <span>Total Riders</span>
+                <strong>{{ total_riders }}</strong>
+            </div>
+            <div class="stats-item">
+                <span>Completed Orders</span>
+                <strong class="success">{{ completed_orders }}</strong>
+            </div>
+            <div class="stats-item">
+                <span>Cancelled Orders</span>
+                <strong class="danger">{{ cancelled_orders }}</strong>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

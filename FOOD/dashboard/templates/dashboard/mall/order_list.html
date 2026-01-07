@@ -1,0 +1,49 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load humanize %}
+
+{% block page_title %}Mall / Orders{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>User</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>
+                        <div class="font-weight-bold">{{ order.user.username }}</div>
+                        <div class="small text-muted">{{ order.delivery_address|truncatechars:20 }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-primary">{{ order.items.count }} items</span>
+                    </td>
+                    <td>৳{{ order.total_price|floatformat:2|intcomma }}</td>
+                    <td>
+                        <span
+                            class="badge {% if order.status == 'delivered' %}badge-success{% elif order.status == 'cancelled' %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">No orders found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

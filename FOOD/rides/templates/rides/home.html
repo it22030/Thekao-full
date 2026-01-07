@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Request a Ride | Theako{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 1rem;
+        z-index: 1;
+    }
+
+    .floating-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    }
+
+    .leaflet-container {
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+
+<div class="relative min-h-screen bg-gray-50">
+    <!-- Active Ride Banner -->
+    {% if active_ride %}
+    <div class="bg-blue-600 text-white p-4 shadow-lg mb-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="animate-pulse w-3 h-3 bg-white rounded-full"></div>
+                <span class="font-medium">Ride in progress</span>
+            </div>
+            <a href="{% url 'rides:ride_detail' active_ride.id %}"
+                class="bg-white text-blue-600 px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-50 transition">
+                Track Ride &rarr;
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container mx-auto px-4 py-8 relative">
+        <div class="grid lg:grid-cols-3 gap-8">
+
+            <!-- Ride Request Form -->
+            <div class="lg:col-span-1 order-2 lg:order-1">
+                <div class="floating-card rounded-2xl p-6 sticky top-24">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Where to?</h2>
+
+                    <form method="POST" action="{% url 'rides:create_ride' %}" id="ride-form" class="space-y-4">
+                        {% csrf_token %}
+
+                        <!-- Hidden Map Coordinates -->
+                        <input type="hidden" name="pickup_lat" id="id_pickup_lat">
+                        <input type="hidden" name="pickup_lng" id="id_pickup_lng">
+                        <input type="hidden" name="dropoff_lat" id="id_dropoff_lat">
+                        <input type="hidden" name="dropoff_lng" id="id_dropoff_lng">
+
+                        <!-- Pickup -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="w-3 h-3 rounded-full bg-blue-500 ring-4 ring-blue-100"></span>
+                            </div>
+                            {{ form.pickup_address }}
+                        </div>
+                        <div class="pl-8 text-xs text-gray-500 mb-2">
+                            Click on map to set Pickup
+                        </div>
+
+                        <!-- Dropoff -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="w-3 h-3 rounded-full bg-red-500 ring-4 ring-red-100"></span>
+                            </div>
+                            {{ form.dropoff_address }}
+                        </div>
+                        <div class="pl-8 text-xs text-gray-500 mb-6">
+                            Click on map to set Dropoff
+                        </div>
+
+                        {% if form.errors %}
+                        <div class="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4">
+                            Please select both locations on the map.
+                        </div>
+                        {% endif %}
+
+                        <button type="submit"
+                            class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transform hover:scale-[1.02] transition-all shadow-xl">
+                            Request Ride
+                        </button>
+                    </form>
+
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'rides:shared_rides' %}"
+                            class="text-blue-600 hover:underline font-medium">Looking to share a ride?</a>
+                    </div>
+
+                    <!-- Recent Rides -->
+                    {% if recent_rides %}
+                    <div class="mt-8 pt-8 border-t border-gray-100">
+                        <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Recent
+                            Destinations</h4>
+                        <div class="space-y-3">
+                            {% for ride in recent_rides %}
+                            <div
+                                class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition group">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ ride.dropoff_address }}</p>
+                                    <p class="text-xs text-gray-400">{{ ride.created_at|timesince }} ago</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Map Area -->
+            <div class="lg:col-span-2 order-1 lg:order-2">
+                <div class="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 h-full">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize Map (Default: Dhaka Center)
+    const map = L.map('map').setView([23.8103, 90.4125], 13);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // Icons
+    const pickupIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    const dropoffIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    let pickupMarker = null;
+    let dropoffMarker = null;
+    let step = 'pickup'; // 'pickup' or 'dropoff'
+
+    // Form Elements
+    const pickupInput = document.getElementById('id_pickup_address');
+    const dropoffInput = document.getElementById('id_dropoff_address');
+    const pickupLat = document.getElementById('id_pickup_lat');
+    const pickupLng = document.getElementById('id_pickup_lng');
+    const dropoffLat = document.getElementById('id_dropoff_lat');
+    const dropoffLng = document.getElementById('id_dropoff_lng');
+
+    // Add Tailwind classes to Django form inputs manually if not done in Python
+    pickupInput.readOnly = true;
+    dropoffInput.readOnly = true;
+    pickupInput.placeholder = "Click on map to set Pickup";
+    dropoffInput.placeholder = "Click on map to set Destination";
+
+    pickupInput.classList.add('w-full', 'pl-10', 'pr-4', 'py-3', 'rounded-xl', 'border-gray-200', 'focus:border-blue-500', 'focus:ring-blue-500', 'bg-gray-50', 'transition', 'cursor-pointer');
+    dropoffInput.classList.add('w-full', 'pl-10', 'pr-4', 'py-3', 'rounded-xl', 'border-gray-200', 'focus:border-red-500', 'focus:ring-red-500', 'bg-gray-50', 'transition', 'cursor-pointer');
+
+    // Map Click Handler
+    map.on('click', function (e) {
+        const { lat, lng } = e.latlng;
+
+        if (step === 'pickup') {
+            if (pickupMarker) map.removeLayer(pickupMarker);
+            pickupMarker = L.marker([lat, lng], { icon: pickupIcon }).addTo(map);
+
+            pickupLat.value = lat;
+            pickupLng.value = lng;
+            pickupInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; // Placeholder for reverse geocoding
+
+            // Auto switch to dropoff
+            step = 'dropoff';
+            pickupInput.classList.remove('ring-2', 'ring-blue-200');
+            dropoffInput.classList.add('ring-2', 'ring-red-200');
+            dropoffInput.focus();
+
+        } else {
+            if (dropoffMarker) map.removeLayer(dropoffMarker);
+            dropoffMarker = L.marker([lat, lng], { icon: dropoffIcon }).addTo(map);
+
+            dropoffLat.value = lat;
+            dropoffLng.value = lng;
+            dropoffInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; // Placeholder for reverse geocoding
+
+            // Draw route line (simple straight line for visual feedback)
+            if (pickupMarker && dropoffMarker) {
+                const group = new L.featureGroup([pickupMarker, dropoffMarker]);
+                map.fitBounds(group.getBounds().pad(0.2));
+            }
+
+            // Reset step to allow changes
+            step = 'pickup';
+            dropoffInput.classList.remove('ring-2', 'ring-red-200');
+        }
+    });
+
+    // Reset markers on input focus to allow manual adjustment logic if needed
+    pickupInput.addEventListener('focus', () => { step = 'pickup'; });
+    dropoffInput.addEventListener('focus', () => { step = 'dropoff'; });
+
+    // Try to get user location
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude } = position.coords;
+            map.setView([latitude, longitude], 15);
+
+            // Optional: set current location as default pickup
+            // if (!pickupMarker) {
+            //     pickupMarker = L.marker([latitude, longitude], {icon: pickupIcon}).addTo(map);
+            //     pickupLat.value = latitude;
+            //     pickupLng.value = longitude;
+            //     pickupInput.value = "Current Location";
+            //     step = 'dropoff';
+            // }
+        });
+    }
+</script>
+{% endblock %}

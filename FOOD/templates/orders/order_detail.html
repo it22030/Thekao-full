@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Tracking Order #{{ order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stepper Styles Override/Integration */
+    .stepper-wrapper {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .stepper-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+
+    .stepper-item::before {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid #ddd;
+        width: 100%;
+        top: 15px;
+        left: -50%;
+        z-index: 2;
+    }
+
+    .stepper-item::after {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid #ddd;
+        width: 100%;
+        top: 15px;
+        left: 50%;
+        z-index: 2;
+    }
+
+    .stepper-item .step-counter {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ddd;
+        color: white;
+        margin-bottom: 6px;
+        font-weight: bold;
+    }
+
+    .stepper-item .step-name {
+        font-size: 12px;
+        color: #999;
+        font-weight: 600;
+    }
+
+    /* Active State */
+    .stepper-item.active .step-counter {
+        background-color: var(--primary);
+    }
+
+    .stepper-item.completed .step-counter {
+        background-color: var(--primary);
+    }
+
+    .stepper-item.completed::after {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid var(--primary);
+        width: 100%;
+        top: 15px;
+        left: 50%;
+        z-index: 3;
+    }
+
+    .stepper-item:first-child::before {
+        content: none;
+    }
+
+    .stepper-item:last-child::after {
+        content: none;
+    }
+
+    .stepper-item.active::before {
+        border-bottom: 2px solid var(--primary);
+        z-index: 3;
+    }
+
+    /* Additional UI Elements */
+    .map-placeholder {
+        background-color: #e9ecef;
+        height: 200px;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23dee2e6" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+    }
+
+    .driver-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+
+    .driver-avatar {
+        width: 50px;
+        height: 50px;
+        background: #ddd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .order-items {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .order-items li {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .order-items li:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h1 style="margin: 0; font-size: 1.5rem;">Order #{{ order.id }}</h1>
+        <span id="text-status"
+            style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.9rem;">
+            {{ order.get_status_display }}
+        </span>
+    </div>
+
+    <!-- Map Placeholder -->
+    <div class="map-placeholder">
+        Interactive Map Loading...
+    </div>
+
+    <!-- Progress Stepper -->
+    <div class="stepper-wrapper">
+        <div class="stepper-item" id="step-placed">
+            <div class="step-counter">1</div>
+            <div class="step-name">Placed</div>
+        </div>
+        <div class="stepper-item" id="step-accepted">
+            <div class="step-counter">2</div>
+            <div class="step-name">Accepted</div>
+        </div>
+        <div class="stepper-item" id="step-preparing">
+            <div class="step-counter">3</div>
+            <div class="step-name">Preparing</div>
+        </div>
+        <div class="stepper-item" id="step-out_for_delivery">
+            <div class="step-counter">4</div>
+            <div class="step-name">On Way</div>
+        </div>
+        <div class="stepper-item" id="step-delivered">
+            <div class="step-counter">5</div>
+            <div class="step-name">Delivered</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Delivery Details</h2>
+    <div id="rider-info-container">
+        {% if order.rider %}
+        <div class="driver-info">
+            <div class="driver-avatar">🛵</div>
+            <div>
+                <div style="font-weight: 600;">{{ order.rider.username }}</div>
+                <div style="font-size: 0.9rem; color: #666;">Professional Rider • Assigned</div>
+            </div>
+            <div style="margin-left: auto; color: var(--primary);">
+                ★ 5.0
+            </div>
+        </div>
+        {% else %}
+        <div class="driver-info" style="justify-content: center; color: #666; font-style: italic;">
+            Waiting for rider assignment...
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Order Summary</h2>
+    <ul class="order-items">
+        {% for item in order.items.all %}
+        <li><span>{{ item.quantity }}x {{ item.menu_item.name }}</span> <span>৳{{ item.price }}</span></li>
+        {% empty %}
+        <li style="color: #999; font-style: italic;">No items details available.</li>
+        {% endfor %}
+        <li style="font-weight: bold; margin-top: 0.5rem; border-top: 2px solid #eee; padding-top: 1rem;">
+            <span>Total</span> <span>৳{{ order.total_price }}</span>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const orderId = "{{ order.id }}";
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(protocol + window.location.host + '/ws/orders/' + orderId + '/');
+
+    const steps = ['placed', 'accepted', 'preparing', 'out_for_delivery', 'delivered'];
+
+    function updateStepper(status) {
+        const statusEl = document.getElementById('text-status');
+        if (statusEl) {
+            statusEl.innerText = status.replace(/_/g, ' ').toUpperCase();
+        }
+
+        // Normalize status to lowercase for comparison
+        const currentStatus = status.toLowerCase().replace(/\s+/g, '_');
+
+        let isActiveFound = false;
+
+        steps.forEach((step, index) => {
+            const stepEl = document.getElementById('step-' + step);
+            if (!stepEl) return;
+            stepEl.classList.remove('active', 'completed');
+
+            if (step === currentStatus) {
+                stepEl.classList.add('active');
+                isActiveFound = true;
+            } else if (!isActiveFound) {
+                stepEl.classList.add('completed');
+            }
+        });
+    }
+
+    function updateRiderInfo(riderName) {
+        const container = document.getElementById('rider-info-container');
+        if (riderName) {
+            container.innerHTML = `
+                <div class="driver-info">
+                    <div class="driver-avatar">🛵</div>
+                    <div>
+                        <div style="font-weight: 600;">${riderName}</div>
+                        <div style="font-size: 0.9rem; color: #666;">Professional Rider • Assigned</div>
+                    </div>
+                    <div style="margin-left: auto; color: var(--primary);">
+                        ★ 5.0
+                    </div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="driver-info" style="justify-content: center; color: #666; font-style: italic;">
+                    Waiting for rider assignment...
+                </div>
+            `;
+        }
+    }
+
+    // Initial set
+    updateStepper("{{ order.status }}");
+
+    socket.onopen = function (e) {
+        console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        console.log('Data received:', data);
+        if (data.status) {
+            updateStepper(data.status);
+        }
+        if (data.rider_name !== undefined) {
+            updateRiderInfo(data.rider_name);
+        }
+    };
+
+    socket.onclose = function (e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+</script>
+{% endblock %}

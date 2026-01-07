@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Super App - One App for Everything{% endblock %}
+
+{% block content %}
+<style>
+    .hero-section {
+        padding: 4rem 1rem;
+        text-align: center;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--secondary);
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto 4rem;
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        padding: 0 1rem;
+    }
+
+    .service-card {
+        background: white;
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
+        text-align: left;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        display: block;
+    }
+
+    .service-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: var(--primary);
+    }
+
+    .icon-wrapper {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+        transition: transform 0.3s ease;
+    }
+
+    .service-card:hover .icon-wrapper {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .service-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .service-desc {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Individual Card Styles */
+    .card-food .icon-wrapper {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .card-ride .icon-wrapper {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+
+    .card-parcel .icon-wrapper {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .card-mall .icon-wrapper {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+
+    .card-admin .icon-wrapper {
+        background: rgba(147, 51, 234, 0.1);
+        color: #9333EA;
+    }
+
+    .coming-soon {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #f3f4f6;
+        padding: 0.25rem 0.75rem;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+
+<div class="hero-section animate-fade-in">
+    <h1 class="hero-title">What would you like to do?</h1>
+    <p class="hero-subtitle">Your all-in-one platform for food, travel, shopping and deliveries.</p>
+
+    <div class="services-grid">
+        <!-- Food Delivery -->
+        <a href="{% url 'restaurant_list' %}" class="service-card card-food">
+            <div class="icon-wrapper">
+                <i data-lucide="utensils"></i>
+            </div>
+            <h3 class="service-title">Food Delivery</h3>
+            <p class="service-desc">Hungry? Order from the best local restaurants near you.</p>
+        </a>
+
+        <!-- Ride Sharing -->
+        <a href="{% url 'rides:ride_home' %}" class="service-card card-ride">
+            <div class="icon-wrapper">
+                <i data-lucide="car"></i>
+            </div>
+            <h3 class="service-title">Ride Sharing</h3>
+            <p class="service-desc">Get a ride in minutes. Fast, safe, and comfortable travel.</p>
+        </a>
+
+        <!-- Parcel Delivery -->
+        <a href="{% url 'parcel_home' %}" class="service-card card-parcel">
+            <div class="icon-wrapper">
+                <i data-lucide="package"></i>
+            </div>
+            <h3 class="service-title">Parcel Delivery</h3>
+            <p class="service-desc">Send packages securely to anyone, anywhere in the city.</p>
+        </a>
+
+        <!-- Shopping Mall -->
+        <a href="{% url 'mall_home' %}" class="service-card card-mall">
+            <div class="icon-wrapper">
+                <i data-lucide="shopping-bag"></i>
+            </div>
+            <h3 class="service-title">Shopping Mall</h3>
+            <p class="service-desc">Shop for groceries, electronics, and fashion brands.</p>
+        </a>
+        {% if user.is_staff or user.is_superuser %}
+        <!-- Admin Dashboard -->
+        <a href="{% url 'admin_dashboard' %}" class="service-card card-admin">
+            <div class="icon-wrapper">
+                <i data-lucide="layout-dashboard"></i>
+            </div>
+            <h3 class="service-title">Admin Dashboard</h3>
+            <p class="service-desc">Manage users, orders, restaurants, and system settings.</p>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Initialize Lucide icons if not already done in base.html
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

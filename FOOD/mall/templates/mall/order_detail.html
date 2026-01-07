@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} - ঠেকাও{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Order #{{ order.id }}</h3>
+                <span class="badge badge-light px-3 py-2">{{ order.get_status_display }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Order Status Progress -->
+            <div class="progress mb-4" style="height: 30px;">
+                {% if order.status == 'placed' %}
+                <div class="progress-bar bg-warning" role="progressbar" style="width: 25%">Placed</div>
+                {% elif order.status == 'accepted' or order.status == 'confirmed' %}
+                <div class="progress-bar bg-info" role="progressbar" style="width: 50%">{{ order.get_status_display }}
+                </div>
+                {% elif order.status == 'shipped' or order.status == 'picked_up' %}
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 75%">{{ order.get_status_display
+                    }}</div>
+                {% elif order.status == 'delivered' %}
+                <div class="progress-bar bg-success" role="progressbar" style="width: 100%">Delivered</div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <h5 class="mb-3">Order Items</h5>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>৳{{ item.price }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>৳{{ item.price|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-right"><strong>Total:</strong></td>
+                                <td><strong class="text-success">৳{{ order.total_price|floatformat:2 }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="col-md-4">
+                    <h5 class="mb-3">Delivery Information</h5>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <p class="mb-2"><strong>Delivery Address:</strong></p>
+                            <p>{{ order.delivery_address }}</p>
+                            <hr>
+                            <p class="mb-1"><strong>Order Date:</strong></p>
+                            <p>{{ order.created_at|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 text-center">
+        <a href="{% url 'my_mall_orders' %}" class="btn btn-link">Back to My Orders</a>
+    </div>
+</div>
+
+<script>
+    const orderId = "{{ order.id }}";
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(protocol + window.location.host + '/ws/status/mall/' + orderId + '/');
+
+    function updateUI(status, riderName) {
+        // Update Status Badge
+        const badge = document.querySelector('.badge');
+        if (badge) badge.innerText = status;
+
+        // Update Progress Bar
+        const progressBar = document.querySelector('.progress-bar');
+        if (progressBar) {
+            progressBar.innerText = status;
+            progressBar.classList.remove('bg-warning', 'bg-info', 'bg-primary', 'bg-success');
+
+            let width = '25%';
+            let bgClass = 'bg-warning';
+
+            const statusLower = status.toLowerCase();
+            if (statusLower === 'placed') { width = '25%'; bgClass = 'bg-warning'; }
+            else if (statusLower === 'accepted' || statusLower === 'confirmed') { width = '50%'; bgClass = 'bg-info'; }
+            else if (statusLower === 'shipped' || statusLower === 'picked up') { width = '75%'; bgClass = 'bg-primary'; }
+            else if (statusLower === 'delivered') { width = '100%'; bgClass = 'bg-success'; }
+
+            progressBar.style.width = width;
+            progressBar.classList.add(bgClass);
+        }
+
+        // Update Rider Info if needed (optional extension)
+    }
+
+    socket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        console.log('Mall Order Update:', data);
+        if (data.status) {
+            updateUI(data.status, data.rider_name);
+        }
+    };
+
+    socket.onclose = function (e) {
+        console.error('Mall Order socket closed unexpectedly');
+    };
+</script>
+{% endblock %}

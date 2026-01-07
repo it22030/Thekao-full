@@ -1,0 +1,77 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load humanize %}
+
+{% block page_title %}Logistics / Parcels{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tracking #</th>
+                    <th>Sender</th>
+                    <th>Route</th>
+                    <th>Rider</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for parcel in parcels %}
+                <tr>
+                    <td>
+                        <div class="font-weight-bold text-primary">{{ parcel.tracking_number }}</div>
+                    </td>
+                    <td>{{ parcel.sender.username }}</td>
+                    <td>
+                        <div class="small">
+                            <span class="text-success">From:</span> {{ parcel.pickup_address|truncatechars:15 }}<br>
+                            <span class="text-danger">To:</span> {{ parcel.dropoff_address|truncatechars:15 }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if parcel.rider %}
+                        {{ parcel.rider.get_full_name|default:parcel.rider.username }}
+                        {% else %}
+                        <span class="text-muted small">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span
+                            class="badge {% if parcel.status == 'delivered' %}badge-success{% elif parcel.status == 'cancelled' %}badge-danger{% else %}badge-primary{% endif %}">
+                            {{ parcel.get_status_display }}
+                        </span>
+                    </td>
+                    <td>৳{{ parcel.price|floatformat:2|intcomma }}</td>
+                    <td>{{ parcel.created_at|date:"M d" }}</td>
+                    <td>
+                        {% if not parcel.rider and parcel.status == 'requested' %}
+                        <form action="{% url 'assign_parcel_rider' parcel.id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <select name="rider_id" class="form-control form-control-sm d-inline-block"
+                                style="width: auto; max-width: 150px;" required>
+                                <option value="">Select Rider</option>
+                                {% for rider in riders %}
+                                <option value="{{ rider.id }}">{{ rider.username }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary ml-1">Assign</button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4">No parcels found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

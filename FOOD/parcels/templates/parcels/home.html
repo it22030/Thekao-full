@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .parcel-hero {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        padding: 3rem 2rem;
+        border-radius: 24px;
+        color: white;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .parcel-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+
+    .parcel-hero h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .parcel-hero p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+
+    .send-btn {
+        background: white;
+        color: #10B981;
+        padding: 0.875rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .send-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        color: #059669;
+    }
+
+    .parcel-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .parcel-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(180deg, #10B981, #059669);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .parcel-card:hover {
+        transform: translateX(4px);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+        border-color: #10B981;
+    }
+
+    .parcel-card:hover::before {
+        transform: scaleY(1);
+    }
+
+    .parcel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .parcel-receiver {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .parcel-date {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .parcel-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.875rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .status-requested {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .status-accepted {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .status-picked_up {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+    }
+
+    .status-delivered {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .parcel-address {
+        display: flex;
+        align-items: start;
+        gap: 0.5rem;
+        color: #4b5563;
+        font-size: 0.9375rem;
+        margin-top: 0.5rem;
+    }
+
+    .parcel-address i {
+        color: #10B981;
+        margin-top: 0.25rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        border-radius: 24px;
+        margin-top: 2rem;
+    }
+
+    .empty-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 3rem;
+    }
+
+    .empty-state h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: #6b7280;
+        font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .parcel-hero h2 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="container my-5">
+    <div class="parcel-hero">
+        <div class="position-relative" style="z-index: 1;">
+            <h2>📦 Parcel Delivery</h2>
+            <p class="mb-4">Fast, secure, and reliable delivery to anywhere in the city</p>
+            <a href="{% url 'create_parcel' %}" class="send-btn">
+                <i data-lucide="send"></i>
+                Send a Parcel
+            </a>
+        </div>
+    </div>
+
+    {% if my_parcels %}
+    <div class="parcels-list">
+        <h4 class="mb-3" style="font-weight: 700; color: #1f2937;">Your Parcels</h4>
+        {% for parcel in my_parcels %}
+        <a href="{% url 'parcel_detail' parcel.id %}" class="parcel-card">
+            <div class="parcel-header">
+                <div>
+                    <h5 class="parcel-receiver">To: {{ parcel.receiver_name }}</h5>
+                    <span class="parcel-date">{{ parcel.created_at|date:"M d, Y" }}</span>
+                </div>
+                <span class="parcel-status status-{{ parcel.status }}">
+                    {% if parcel.status == 'requested' %}
+                    <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                    {% elif parcel.status == 'accepted' %}
+                    <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+                    {% elif parcel.status == 'picked_up' %}
+                    <i data-lucide="truck" style="width: 16px; height: 16px;"></i>
+                    {% elif parcel.status == 'delivered' %}
+                    <i data-lucide="package-check" style="width: 16px; height: 16px;"></i>
+                    {% endif %}
+                    {{ parcel.get_status_display }}
+                </span>
+            </div>
+            <div class="parcel-address">
+                <i data-lucide="map-pin"></i>
+                <span>{{ parcel.dropoff_address }}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            📦
+        </div>
+        <h4>No parcels sent yet</h4>
+        <p>Need to send something securely? We've got you covered.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

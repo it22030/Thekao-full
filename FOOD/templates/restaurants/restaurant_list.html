@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Restaurants - FastEats Gourmet Selection{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        margin: 4rem 0 3rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        margin: 0;
+    }
+
+    .filters-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        overflow-x: auto;
+    }
+
+    .filter-chip {
+        padding: 0.6rem 1.5rem;
+        background: #F3F4F6;
+        border-radius: 100px;
+        color: var(--secondary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .filter-chip:hover {
+        background: #E5E7EB;
+    }
+
+    .filter-chip.active {
+        background: rgba(215, 15, 100, 0.1);
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .restaurant-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 2.5rem;
+    }
+
+    .res-card {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .res-image-wrapper {
+        height: 240px;
+        border-radius: 28px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+    .res-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .res-card:hover .res-image {
+        transform: scale(1.1);
+    }
+
+    .res-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: white;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--primary);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .res-rating {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        background: white;
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .res-info h3 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 0 0 0.5rem 0;
+        color: var(--secondary);
+        letter-spacing: -0.02em;
+    }
+
+    .res-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .dot {
+        width: 4px;
+        height: 4px;
+        background: #D1D5DB;
+        border-radius: 50%;
+    }
+</style>
+
+<div class="animate-fade-in">
+    <div class="page-header">
+        <h1 class="page-title">Top Delivery <span>Restaurants</span></h1>
+    </div>
+
+    <div class="filters-bar">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip">Fast Food</div>
+        <div class="filter-chip">Italian</div>
+        <div class="filter-chip">Japanese</div>
+        <div class="filter-chip">Desserts</div>
+        <div class="filter-chip">Healthy</div>
+        <div class="filter-chip">Offers</div>
+    </div>
+
+    <div class="restaurant-grid">
+        {% for restaurant in restaurants %}
+        <div class="res-card" onclick="window.location.href='{% url 'menu_detail' restaurant.id %}'">
+            <div class="res-image-wrapper">
+                {% if restaurant.image %}
+                <img src="{{ restaurant.image }}" class="res-image" alt="{{ restaurant.name }}">
+                {% else %}
+                <div
+                    style="height: 100%; background: #F3F4F6; display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                    🍽️
+                </div>
+                {% endif %}
+
+                {% if forloop.counter <= 3 %} <div class="res-badge">Recommended
+            </div>
+            {% endif %}
+
+            <div class="res-rating">
+                <i data-lucide="star" style="width: 14px; fill: #FFB800; color: #FFB800;"></i>
+                {{ restaurant.rating }}
+            </div>
+        </div>
+
+        <div class="res-info">
+            <h3>{{ restaurant.name }}</h3>
+            <div class="res-meta">
+                <span style="color: var(--primary);">$$</span>
+                <span class="dot"></span>
+                <span>{{ restaurant.description|truncatewords:6 }}</span>
+            </div>
+            <div
+                style="margin-top: 0.75rem; font-size: 0.85rem; color: #9CA3AF; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="map-pin" style="width: 14px;"></i>
+                {{ restaurant.address|truncatechars:40 }}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 6rem;">
+        <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.3;">🍽️</div>
+        <h2 style="color: var(--text-muted);">No restaurants discovered yet.</h2>
+        <p style="color: #9CA3AF; margin-bottom: 2rem;">Check back later or join us as a partner!</p>
+        {% if user.is_staff or user.is_superuser %}
+        <a href="/admin/restaurants/restaurant/add/" class="btn">Add Restaurant</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+</div>
+{% endblock %}

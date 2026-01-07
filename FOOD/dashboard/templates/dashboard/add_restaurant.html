@@ -1,0 +1,126 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block page_title %}Add Restaurant{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+        font-size: 0.95rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: all 0.2s;
+        box-sizing: border-box;
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-submit {
+        background: var(--primary-grad);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-cancel {
+        background: white;
+        color: var(--text-muted);
+        border: 1px solid #e2e8f0;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 100%;
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        box-sizing: border-box;
+        transition: background 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: #f8fafc;
+        color: var(--text-color);
+    }
+
+    .action-row {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1.5rem;
+        margin-top: 3rem;
+    }
+</style>
+
+<div class="form-container">
+    <div class="card">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Restaurant Name</label>
+                <input type="text" name="name" class="form-input" placeholder="e.g. Burger King" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-input" rows="4" style="resize: vertical; min-height: 100px;"
+                    placeholder="Short description of the cuisine..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" name="address" class="form-input" placeholder="e.g. 123 Food Street, Dhaka" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Cover Image URL</label>
+                <input type="url" name="image" class="form-input" placeholder="https://example.com/image.jpg">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                    Provide a direct URL to an image (JPG/PNG).
+                </p>
+            </div>
+
+            <div class="action-row">
+                <a href="{% url 'manage_restaurants' %}" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-submit">Create Restaurant</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

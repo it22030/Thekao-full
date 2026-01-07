@@ -1,0 +1,77 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Runs / Rides{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Passenger</th>
+                    <th>Driver</th>
+                    <th>Status</th>
+                    <th>Pickup / Dropoff</th>
+                    <th>Fare</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ride in rides %}
+                <tr>
+                    <td>#{{ ride.id }}</td>
+                    <td>
+                        <div class="font-weight-bold">{{ ride.passenger.username }}</div>
+                    </td>
+                    <td>
+                        {% if ride.driver %}
+                        <span>{{ ride.driver.get_full_name|default:ride.driver.username }}</span>
+                        {% else %}
+                        <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span
+                            class="badge {% if ride.status == 'completed' %}badge-success{% elif ride.status == 'cancelled' %}badge-danger{% elif ride.status == 'in_progress' %}badge-primary{% else %}badge-warning{% endif %}">
+                            {{ ride.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="small">
+                            <span class="text-success">●</span> {{ ride.pickup_address|truncatechars:20 }}<br>
+                            <span class="text-danger">●</span> {{ ride.dropoff_address|truncatechars:20 }}
+                        </div>
+                    </td>
+                    <td>৳{{ ride.fare|default:"-" }}</td>
+                    <td>{{ ride.created_at|date:"M d, H:i" }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{% url 'rides:ride_detail' ride.id %}" class="btn btn-sm btn-light border">View</a>
+
+                            {% if ride.status == 'requested' %}
+                            <form action="{% url 'assign_ride' ride.id %}" method="post" class="d-flex gap-1">
+                                {% csrf_token %}
+                                <select name="driver_id" class="form-select form-select-sm" style="width: 120px;">
+                                    <option value="">Assign...</option>
+                                    {% for rider in riders %}
+                                    <option value="{{ rider.id }}">{{ rider.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Go</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4">No rides found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

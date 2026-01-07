@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Food - FastEats{% endblock %}
+
+{% block content %}
+<div class="card text-center" style="max-width: 500px; margin: 3rem auto;">
+    <div style="font-size: 4rem; margin-bottom: 1rem;">🍕</div>
+    <h1 class="mb-4">Hungry?</h1>
+    <p style="color: #666; margin-bottom: 2rem; font-size: 1.1rem;">
+        Delicious food is just one click away. Place your order now and track it live!
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.2rem;">
+            Place Order Now
+        </button>
+    </form>
+</div>
+{% endblock %}

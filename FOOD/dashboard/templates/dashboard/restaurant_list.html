@@ -1,0 +1,85 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Restaurant Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h3 style="margin: 0;">Partner Restaurants</h3>
+            <div style="font-size: 0.875rem; color: var(--text-muted);">
+                Total: {{ restaurants|length }} Active Partners
+            </div>
+        </div>
+        <a href="{% url 'add_restaurant' %}" class="btn" style="padding: 0.6rem 1.25rem; border-radius: 8px;">
+            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+            Add Restaurant
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Restaurant ID</th>
+                    <th>Restaurant Details</th>
+                    <th>Address</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for restaurant in restaurants %}
+                <tr>
+                    <td><span style="font-weight: 700; color: var(--text-muted);">#{{ restaurant.id }}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="width: 40px; height: 40px; border-radius: 12px; background: #fff1f2; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                                🍱
+                            </div>
+                            <div style="font-weight: 700; color: #0f172a;">{{ restaurant.name }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.875rem; color: #475569; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                            title="{{ restaurant.address }}">
+                            {{ restaurant.address }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-warning" style="background: #fffbeb; color: #d97706;">
+                            <i data-lucide="star" style="width: 14px; height: 14px; fill: currentColor;"></i>
+                            {{ restaurant.rating }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-success" style="background: #ecfdf5; color: #10b981;">Open</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-logout" title="Edit Restaurant"
+                                style="width: 36px; height: 36px; padding: 0;">
+                                <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                            </button>
+                            <a href="{% url 'delete_restaurant' restaurant.id %}" class="btn-logout"
+                                title="Delete Restaurant"
+                                style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; color: #ef4444; background: #fef2f2;"
+                                onclick="return confirm('Are you sure you want to delete {{ restaurant.name }}?');">
+                                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">No restaurants
+                        found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

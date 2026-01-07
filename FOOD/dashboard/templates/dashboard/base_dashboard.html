@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SuperApp Admin{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            /* Premium Palette */
+            --primary: #6366f1;
+            /* Indigo */
+            --primary-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: rgba(255, 255, 255, 0.1);
+            --sidebar-text: #94a3b8;
+            --sidebar-active: #ffffff;
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 20%);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            padding: 2rem 0;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand .logo-icon {
+            background: var(--primary-grad);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+
+        .nav-section {
+            padding: 0 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #475569;
+            margin-bottom: 0.75rem;
+            padding-left: 1rem;
+        }
+
+        .nav-link {
+            padding: 0.75rem 1rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            border-radius: 12px;
+            margin-bottom: 0.25rem;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            background-color: var(--sidebar-hover);
+            color: var(--sidebar-active);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: var(--primary-grad);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-link i {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 2rem 3rem;
+            width: calc(100% - 280px);
+            max-width: 1600px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+            border-radius: 9999px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid white;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+
+        .user-role {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: #f1f5f9;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #64748b;
+            transition: 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        /* Cards & Glassmorphism */
+        .card,
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: var(--glass-border);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2rem;
+            margin-bottom: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Decorative circle in stat card */
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            z-index: 0;
+        }
+
+        .stat-card>div {
+            z-index: 1;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.05em;
+            line-height: 1;
+        }
+
+        /* Tables Premium */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            text-align: left;
+            padding: 1.2rem 1.5rem;
+            background-color: rgba(248, 250, 252, 0.5);
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(241, 245, 249, 0.5);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-primary {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .alert-success {
+            background: rgba(220, 252, 231, 0.9);
+            color: #166534;
+            border: 1px solid #bbfcce;
+        }
+
+        .alert-error {
+            background: rgba(254, 226, 226, 0.9);
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <a href="{% if user.role == 'admin' or user.is_superuser %}{% url 'admin_dashboard' %}{% else %}{% url 'rider_dashboard' %}{% endif %}"
+            class="brand">
+            <div class="logo-icon">🚀</div>
+            Super<span>App</span>
+        </a>
+
+        {% if user.role == 'admin' or user.is_superuser %}
+        <!-- OVERVIEW -->
+        <div class="nav-section">
+            <div class="nav-section-title">Overview</div>
+            <nav>
+                <a href="{% url 'admin_dashboard' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                    <i data-lucide="layout-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'manage_users' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_users' %}active{% endif %}">
+                    <i data-lucide="users"></i>
+                    <span>Users</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- FOOD DELIVERY -->
+        <div class="nav-section">
+            <div class="nav-section-title">Food Delivery</div>
+            <nav>
+                <a href="{% url 'manage_restaurants' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_restaurants' %}active{% endif %}">
+                    <i data-lucide="store"></i>
+                    <span>Restaurants</span>
+                </a>
+                <a href="{% url 'manage_orders' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_orders' %}active{% endif %}">
+                    <i data-lucide="utensils-crossed"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="{% url 'add_restaurant' %}" class="nav-link text-primary small pl-4">
+                    <i data-lucide="plus-circle" style="width: 14px;"></i>
+                    <span>Add Restaurant</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="nav-section">
+            <div class="nav-section-title">Configuration</div>
+            <nav>
+                <a href="{% url 'manage_settings' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_settings' %}active{% endif %}">
+                    <i data-lucide="settings"></i>
+                    <span>Pricing & Profit</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- RIDES -->
+        <div class="nav-section">
+            <div class="nav-section-title">Ride Sharing</div>
+            <nav>
+                <a href="{% url 'manage_riders' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_riders' %}active{% endif %}">
+                    <i data-lucide="bike"></i>
+                    <span>Drivers</span>
+                </a>
+                <a href="{% url 'manage_rides' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_rides' %}active{% endif %}">
+                    <i data-lucide="car-taxi-front"></i>
+                    <span>Trips</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- E-COMMERCE -->
+        <div class="nav-section">
+            <div class="nav-section-title">Mall (E-com)</div>
+            <nav>
+                <a href="{% url 'manage_shops' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_shops' %}active{% endif %}">
+                    <i data-lucide="shopping-bag"></i>
+                    <span>Shops</span>
+                </a>
+                <a href="{% url 'manage_mall_orders' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_mall_orders' %}active{% endif %}">
+                    <i data-lucide="package"></i>
+                    <span>Orders</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- LOGISTICS -->
+        <div class="nav-section">
+            <div class="nav-section-title">Logistics</div>
+            <nav>
+                <a href="{% url 'manage_parcels' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'manage_parcels' %}active{% endif %}">
+                    <i data-lucide="box"></i>
+                    <span>Parcels</span>
+                </a>
+            </nav>
+        </div>
+
+        {% elif user.role == 'rider' %}
+        <div class="nav-section">
+            <div class="nav-section-title">Partner Panel</div>
+            <nav>
+                <a href="{% url 'rider_dashboard' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'rider_dashboard' %}active{% endif %}">
+                    <i data-lucide="clipboard-list"></i>
+                    <span>My Tasks</span>
+                </a>
+                <a href="{% url 'available_orders' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'available_orders' %}active{% endif %}">
+                    <i data-lucide="radar"></i>
+                    <span>Available Jobs</span>
+                </a>
+            </nav>
+        </div>
+        {% endif %}
+
+        <div class="nav-section" style="margin-top: auto;">
+            <nav>
+                <a href="{% url 'home' %}" class="nav-link">
+                    <i data-lucide="external-link"></i>
+                    <span>View Site</span>
+                </a>
+            </nav>
+        </div>
+
+    </aside>
+
+    <div class="main-content">
+        <header>
+            <h1 class="page-title">{% block page_title %}Overview{% endblock %}</h1>
+            <div class="user-menu">
+                <div class="user-info">
+                    <span class="user-name">{{ user.username }}</span>
+                    <span class="user-role">
+                        {% if user.role == 'admin' or user.is_superuser %}Admin
+                        {% elif user.role == 'rider' %}Partner
+                        {% else %}User{% endif %}
+                    </span>
+                </div>
+                <!-- Using a simple form for logout is safer/standard -->
+                <form action="{% url 'logout' %}" method="post" id="logout-form" style="display: none;">
+                    {% csrf_token %}
+                </form>
+                <button type="button" class="btn-logout" title="Logout"
+                    onclick="document.getElementById('logout-form').submit();">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div
+                class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% else %}alert-info{% endif %}">
+                <i
+                    data-lucide="{% if message.tags == 'success' %}check-circle-2{% elif message.tags == 'error' %}alert-circle{% else %}info{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

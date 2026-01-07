@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="section-header mb-4">
+        <h2>Shopping Mall</h2>
+        <p class="text-muted">Browse exclusive shops and brands</p>
+    </div>
+
+    <div class="row">
+        {% for shop in shops %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100 shop-card">
+                {% if shop.image %}
+                <img src="{{ shop.image }}" class="card-img-top" alt="{{ shop.name }}"
+                    style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                    style="height: 200px;">
+                    <i class="fas fa-store fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ shop.name }}</h5>
+                    <p class="card-text text-muted">{{ shop.description|truncatewords:20 }}</p>
+    <a href="{% url 'shop_detail' shop.id %}"
+   class="btn btn-outline-primary btn-block"
+   style="color: white; background-color: blue; border-color: blue;">
+   Visit Shop
+</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-store-slash fa-4x text-muted"></i>
+            </div>
+            <h3>No Shops Available Yet</h3>
+            <p>We are onboarding new partners. Please check back later!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

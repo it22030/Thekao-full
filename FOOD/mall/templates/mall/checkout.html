@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - ঠেকাও{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Checkout</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Delivery Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="delivery_address">Delivery Address *</label>
+                            <textarea name="delivery_address" id="delivery_address" class="form-control" rows="3"
+                                required placeholder="Enter your complete delivery address"></textarea>
+                            <small class="form-text text-muted">
+                                Please include street address, area, and any landmarks
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Your order will be delivered within 2-3 business days
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg btn-block">
+                            <i class="fas fa-check"></i> Place Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart_items %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ item.name }} × {{ item.quantity }}</span>
+                        <span>৳{{ item.subtotal|floatformat:2 }}</span>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total:</strong>
+                        <strong class="text-success">৳{{ total|floatformat:2 }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{% url 'mall_cart' %}" class="btn btn-outline-secondary btn-block mt-3">
+                <i class="fas fa-arrow-left"></i> Back to Cart
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

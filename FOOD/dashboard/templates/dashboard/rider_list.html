@@ -1,0 +1,182 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}Rider Management | FastEats{% endblock %}
+{% block page_title %}Rider Fleet{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h3 style="margin: 0;">Active Delivery Partners</h3>
+        <div style="font-size: 0.875rem; color: var(--text-muted);">
+            Total: {{ riders|length }} Riders
+        </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <a href="?type=all" class="btn {% if current_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}"
+            style="padding: 0.5rem 1rem; font-size: 0.875rem;">All Riders</a>
+        <a href="?type=food" class="btn {% if current_filter == 'food' %}btn-primary{% else %}btn-secondary{% endif %}"
+            style="padding: 0.5rem 1rem; font-size: 0.875rem;">🍔 Food Only</a>
+        <a href="?type=parcel" class="btn {% if current_filter == 'parcel' %}btn-primary{% else %}btn-secondary{% endif %}"
+            style="padding: 0.5rem 1rem; font-size: 0.875rem;">📦 Parcel Only</a>
+        <a href="?type=ride" class="btn {% if current_filter == 'ride' %}btn-primary{% else %}btn-secondary{% endif %}"
+            style="padding: 0.5rem 1rem; font-size: 0.875rem;">🚗 Ride Only</a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rider</th>
+                    <th>Service Type</th>
+                    <th>Contact Info</th>
+                    <th>Fleet Status</th>
+                    <th>Active Deliveries</th>
+                    <th>Performance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rider in riders %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #fff7ed; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                                🛵
+                            </div>
+                            <div style="font-weight: 700; color: #0f172a;">{{ rider.username }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if rider.rider_profile %}
+                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                            {% if rider.rider_profile.is_food_rider %}
+                            <span class="badge" style="background: #fff7ed; color: #ea580c;">🍔 Food</span>
+                            {% endif %}
+                            {% if rider.rider_profile.is_parcel_rider %}
+                            <span class="badge" style="background: #eff6ff; color: #2563eb;">📦 Parcel</span>
+                            {% endif %}
+                            {% if rider.rider_profile.is_ride_rider %}
+                            <span class="badge" style="background: #f0fdf4; color: #16a34a;">🚗 Ride</span>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="font-size: 0.875rem; font-weight: 500;">{{ rider.email }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Joined {{ rider.date_joined|date:"M Y" }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-success" style="background: #ecfdf5; color: #10b981;">Online</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-primary">
+                            <i data-lucide="package" style="width: 14px; height: 14px;"></i>
+                            {{ rider.deliveries.count }} Active
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 4px; color: #eab308; font-weight: 700;">
+                            <i data-lucide="star" style="width: 14px; height: 14px; fill: currentColor;"></i>
+                            4.8
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="openEditModal('{{ rider.id }}', '{{ rider.username }}', {{ rider.rider_profile.is_food_rider|yesno:'true,false' }}, {{ rider.rider_profile.is_parcel_rider|yesno:'true,false' }}, {{ rider.rider_profile.is_ride_rider|yesno:'true,false' }})"
+                                class="btn-edit" title="Edit Services"
+                                style="width: 36px; height: 36px; padding: 0; background: #e0f2fe; color: #0284c7; border: none; border-radius: 8px; cursor: pointer;">
+                                <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                            </button>
+
+                            <form action="{% url 'delete_user' rider.id %}" method="post" onsubmit="return confirm('Are you sure?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-logout" title="Remove Rider"
+                                    style="width: 36px; height: 36px; padding: 0; background: #fee2e2; border: none; border-radius: 8px; cursor: pointer;">
+                                    <i data-lucide="user-minus" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No riders found in the fleet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Edit Services Modal -->
+<div id="editServicesModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 16px; width: 400px; max-width: 90%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 id="modalRiderName" style="margin: 0;">Edit Services</h3>
+            <button onclick="closeEditModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form id="editServicesForm" method="post" action="">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+                <label style="display: flex; align-items: center; gap: 10px; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+                    <input type="checkbox" name="is_food_rider" id="checkFood" style="width: 20px; height: 20px;">
+                    <div>
+                        <div style="font-weight: 600;">🍔 Food Delivery</div>
+                        <div style="font-size: 0.875rem; color: #64748b;">Delivering restaurant orders</div>
+                    </div>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 10px; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+                    <input type="checkbox" name="is_parcel_rider" id="checkParcel" style="width: 20px; height: 20px;">
+                    <div>
+                        <div style="font-weight: 600;">📦 Parcel Delivery</div>
+                        <div style="font-size: 0.875rem; color: #64748b;">Inter-city parcel delivery</div>
+                    </div>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 10px; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+                    <input type="checkbox" name="is_ride_rider" id="checkRide" style="width: 20px; height: 20px;">
+                    <div>
+                        <div style="font-weight: 600;">🚗 Ride Sharing</div>
+                        <div style="font-size: 0.875rem; color: #64748b;">Driving passengers</div>
+                    </div>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" onclick="closeEditModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditModal(riderId, username, isFood, isParcel, isRide) {
+        document.getElementById('editServicesModal').style.display = 'flex';
+        document.getElementById('modalRiderName').innerText = 'Edit Services: ' + username;
+        document.getElementById('editServicesForm').action = "/dashboard/rider/update-services/" + riderId + "/";
+
+        document.getElementById('checkFood').checked = isFood;
+        document.getElementById('checkParcel').checked = isParcel;
+        document.getElementById('checkRide').checked = isRide;
+    }
+
+    function closeEditModal() {
+        document.getElementById('editServicesModal').style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+        if (event.target == document.getElementById('editServicesModal')) {
+            closeEditModal();
+        }
+    }
+</script>
+
+{% endblock %}

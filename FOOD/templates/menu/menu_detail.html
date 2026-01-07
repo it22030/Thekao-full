@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ restaurant.name }} - Menu | FastEats{% endblock %}
+
+{% block content %}
+<style>
+    .restaurant-banner {
+        height: 300px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        margin: -4rem -24px 3rem -24px;
+        overflow: hidden;
+    }
+
+    .banner-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.7;
+    }
+
+    .banner-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2.5rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+        color: white;
+    }
+
+    .restaurant-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        letter-spacing: -0.02em;
+    }
+
+    .restaurant-meta {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .rating-badge {
+        background: #10B981;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .menu-grid {
+        display: grid;
+        gap: 2rem;
+    }
+
+    .menu-item-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        display: flex;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    }
+
+    .menu-item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-content {
+        padding: 2rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .item-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--secondary);
+    }
+
+    .item-description {
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .item-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .item-price {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--primary);
+    }
+
+    .item-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .item-image {
+        width: 200px;
+        flex-shrink: 0;
+        object-fit: cover;
+    }
+
+    .item-image-placeholder {
+        width: 200px;
+        flex-shrink: 0;
+        background: #F3F4F6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+    }
+
+    @media (max-width: 768px) {
+        .menu-item-card {
+            flex-direction: column;
+        }
+
+        .item-image,
+        .item-image-placeholder {
+            width: 100%;
+            height: 200px;
+        }
+
+        .restaurant-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="restaurant-banner">
+    {% if restaurant.image %}
+    <img src="{{ restaurant.image }}" class="banner-image" alt="{{ restaurant.name }}">
+    {% endif %}
+    <div class="banner-content">
+        <h1 class="restaurant-title">{{ restaurant.name }}</h1>
+        <div class="restaurant-meta">
+            <span class="rating-badge">
+                <i data-lucide="star" style="width: 16px; fill: currentColor;"></i>
+                {{ restaurant.rating }}
+            </span>
+            <span style="font-size: 1.05rem;">{{ restaurant.description }}</span>
+        </div>
+        <div style="margin-top: 0.75rem; opacity: 0.9; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="map-pin" style="width: 16px;"></i>
+            {{ restaurant.address }}
+        </div>
+    </div>
+</div>
+
+<div class="animate-fade-in">
+    <h2 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 2.5rem; color: var(--secondary);">
+        Popular Items
+    </h2>
+
+    <div class="menu-grid">
+        {% for item in menu_items %}
+        <div class="menu-item-card">
+            <div class="item-content">
+                <div>
+                    <h3 class="item-title">{{ item.name }}</h3>
+                    <p class="item-description">{{ item.description|default:"Delicious menu item from our kitchen" }}
+                    </p>
+                </div>
+                <div class="item-footer">
+                    <span class="item-price">৳{{ item.price }}</span>
+                    <div class="item-actions">
+                        <form action="{% url 'add_to_cart' item.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn" style="padding: 0.75rem 1.5rem;">
+                                <i data-lucide="shopping-cart" style="width: 16px;"></i>
+                                Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% if item.image %}
+            <img src="{{ item.image }}" class="item-image" alt="{{ item.name }}">
+            {% else %}
+            <div class="item-image-placeholder">🍽️</div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 6rem 0;">
+            <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.2;">🍽️</div>
+            <h3 style="color: var(--text-muted); font-size: 1.5rem;">No menu items available</h3>
+            <p style="color: #9CA3AF;">Check back soon for delicious offerings!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

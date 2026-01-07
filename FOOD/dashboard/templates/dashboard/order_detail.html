@@ -1,0 +1,827 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}Order Details #{{ order.id }} | FastEats{% endblock %}
+
+{% block page_title %}Order Details #{{ order.id }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Stepper Styles */
+    .stepper-wrapper {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .stepper-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+
+    .stepper-item::before {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid #ddd;
+        width: 100%;
+        top: 15px;
+        left: -50%;
+        z-index: 2;
+    }
+
+    .stepper-item::after {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid #ddd;
+        width: 100%;
+        top: 15px;
+        left: 50%;
+        z-index: 2;
+    }
+
+    .stepper-item .step-counter {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ddd;
+        color: white;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
+
+    .stepper-item .step-name {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    /* Active State */
+    .stepper-item.active .step-counter {
+        background-color: var(--primary);
+    }
+
+    .stepper-item.completed .step-counter {
+        background-color: var(--primary);
+    }
+
+    .stepper-item.completed::after {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid var(--primary);
+        width: 100%;
+        top: 15px;
+        left: 50%;
+        z-index: 3;
+    }
+
+    .stepper-item:first-child::before {
+        content: none;
+    }
+
+    .stepper-item:last-child::after {
+        content: none;
+    }
+
+    .stepper-item.active::before {
+        border-bottom: 2px solid var(--primary);
+        z-index: 3;
+    }
+
+    /* Single Button System */
+    .single-button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 1.5rem;
+    }
+
+    .action-btn {
+        padding: 14px 24px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        text-decoration: none;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+        }
+        70% {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+        }
+    }
+
+    .btn-accept {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    .btn-accept:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-preparing {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .btn-preparing:hover {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-on-the-way {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+        color: white;
+    }
+
+    .btn-on-the-way:hover {
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
+    }
+
+    .btn-delivered {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .btn-delivered:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-cancel {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        margin-top: 10px;
+        animation: none;
+    }
+
+    .btn-cancel:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+    }
+
+    .completed-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #64748b;
+    }
+
+    .step-item i {
+        width: 16px;
+        height: 16px;
+        color: #10b981;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-confirmed { background-color: #3b82f6; color: white; }
+    .status-prepared { background-color: #f59e0b; color: white; }
+    .status-ready { background-color: #06b6d4; color: white; }
+    .status-on-the-way { background-color: #8b5cf6; color: white; }
+    .status-delivered { background-color: #10b981; color: white; }
+    .status-rejected { background-color: #ef4444; color: white; }
+    .status-cancelled { background-color: #64748b; color: white; }
+
+    .order-summary-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .order-summary-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9375rem;
+    }
+
+    .order-summary-list li:last-child {
+        border-bottom: none;
+    }
+
+    .info-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 1.25rem;
+        margin-top: 1rem;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .reject-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .quick-reasons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 1rem 0;
+    }
+
+    .quick-reason-btn {
+        padding: 8px 12px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .quick-reason-btn:hover {
+        background: #e2e8f0;
+    }
+</style>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Status Tracker -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3 style="margin: 0;">Order Status</h3>
+                <span id="text-status" class="status-badge status-{{ order.status }}" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                    {{ order.get_status_display|upper }}
+                </span>
+            </div>
+
+            <!-- Status Stepper -->
+            <div class="stepper-wrapper">
+                <div class="stepper-item" id="step-placed">
+                    <div class="step-counter">1</div>
+                    <div class="step-name">Placed</div>
+                </div>
+                <div class="stepper-item" id="step-accepted">
+                    <div class="step-counter">2</div>
+                    <div class="step-name">Accepted</div>
+                </div>
+                <div class="stepper-item" id="step-preparing">
+                    <div class="step-counter">3</div>
+                    <div class="step-name">Preparing</div>
+                </div>
+                <div class="stepper-item" id="step-out_for_delivery">
+                    <div class="step-counter">4</div>
+                    <div class="step-name">On Way</div>
+                </div>
+                <div class="stepper-item" id="step-delivered">
+                    <div class="step-counter">5</div>
+                    <div class="step-name">Delivered</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons for Admin/Rider -->
+            {% if user.role == 'admin' or user.is_superuser or user == order.rider %}
+                {% if order.status != 'delivered' and order.status != 'cancelled' and order.status != 'rejected' %}
+                <div class="info-card">
+                    <h4 style="margin-top: 0; margin-bottom: 0.75rem; font-size: 0.875rem;">Next Action Required</h4>
+                    <p style="margin-bottom: 1rem; font-size: 0.8125rem; color: #64748b;">
+                        Click the button below to proceed to the next step.
+                    </p>
+
+                    <div class="single-button-container">
+                        <!-- Only show ONE button based on current status -->
+                        {% if order.status == 'placed' %}
+                        <form method="post" action="{% url 'update_order_status' order.id %}" style="width: 100%;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <input type="hidden" name="status" value="accepted">
+                            <button type="submit" class="action-btn btn-accept" onclick="return confirm('Are you sure you want to accept this order?');">
+                                <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+                                Accept Order
+                            </button>
+                        </form>
+                        {% elif order.status == 'accepted' %}
+                        <form method="post" action="{% url 'update_order_status' order.id %}" style="width: 100%;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <input type="hidden" name="status" value="preparing">
+                            <button type="submit" class="action-btn btn-preparing" onclick="return confirm('Are you sure you want to mark as preparing?');">
+                                <i data-lucide="cooking-pot" style="width: 20px; height: 20px;"></i>
+                                Start Preparing
+                            </button>
+                        </form>
+                        {% elif order.status == 'preparing' %}
+                        <form method="post" action="{% url 'update_order_status' order.id %}" style="width: 100%;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <input type="hidden" name="status" value="out_for_delivery">
+                            <button type="submit" class="action-btn btn-on-the-way" onclick="return confirm('Are you sure you want to mark as out for delivery?');">
+                                <i data-lucide="package" style="width: 20px; height: 20px;"></i>
+                                Mark as On the Way
+                            </button>
+                        </form>
+                        {% elif order.status == 'out_for_delivery' %}
+                        <form method="post" action="{% url 'update_order_status' order.id %}" style="width: 100%;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <input type="hidden" name="status" value="delivered">
+                            <button type="submit" class="action-btn btn-delivered" onclick="return confirm('Are you sure you want to mark as delivered?');">
+                                <i data-lucide="check" style="width: 20px; height: 20px;"></i>
+                                Mark as Delivered
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <!-- Cancel/Reject Button (Always shown except for delivered orders) -->
+                        <button type="button"
+                                class="action-btn btn-cancel"
+                                onclick="rejectOrderWithMessage('{{ order.id }}', '{{ order.user.id }}')">
+                            <i data-lucide="x-circle" style="width: 20px; height: 20px;"></i>
+                            Reject Order
+                        </button>
+
+                        <!-- Completed Steps -->
+                        <div class="completed-steps">
+                            <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Completed Steps:</p>
+
+                            {% if order.status == 'accepted' or order.status == 'preparing' or order.status == 'out_for_delivery' or order.status == 'delivered' %}
+                            <div class="step-item">
+                                <i data-lucide="check-circle"></i>
+                                Order Accepted
+                            </div>
+                            {% endif %}
+
+                            {% if order.status == 'preparing' or order.status == 'out_for_delivery' or order.status == 'delivered' %}
+                            <div class="step-item">
+                                <i data-lucide="cooking-pot"></i>
+                                Food Preparing
+                            </div>
+                            {% endif %}
+
+                            {% if order.status == 'out_for_delivery' or order.status == 'delivered' %}
+                            <div class="step-item">
+                                <i data-lucide="package"></i>
+                                Out for Delivery
+                            </div>
+                            {% endif %}
+
+                            {% if order.status == 'delivered' %}
+                            <div class="step-item">
+                                <i data-lucide="check"></i>
+                                Order Delivered
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- Order Timeline -->
+            <div class="info-card">
+                <span class="info-label">Order Timeline</span>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
+                        <div>
+                            <div style="font-weight: 500;">Order Placed</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">
+                                {{ order.created_at|date:"F j, Y g:i A" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% if order.updated_at and order.updated_at != order.created_at %}
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 8px; height: 8px; background-color: #3b82f6; border-radius: 50%;"></div>
+                        <div>
+                            <div style="font-weight: 500;">Last Updated</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">
+                                {{ order.updated_at|date:"F j, Y g:i A" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="card">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Order Summary</h3>
+            <ul class="order-summary-list">
+                {% for item in order.items.all %}
+                <li>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            🍔
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">{{ item.menu_item.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                Quantity: {{ item.quantity }} × ৳{{ item.menu_item.price }}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-weight: 700;">৳{{ item.price }}</div>
+                </li>
+                {% empty %}
+                <li style="color: var(--text-muted); font-style: italic;">No items details available.</li>
+                {% endfor %}
+
+                <li style="border-top: 2px solid #f1f5f9; margin-top: 1rem; padding-top: 1.5rem;">
+                    <div style="font-weight: 700; font-size: 1.125rem;">Total Amount</div>
+                    <div style="font-weight: 800; font-size: 1.25rem; color: var(--primary);">৳{{ order.total_price }}</div>
+                </li>
+            </ul>
+
+            <!-- Order Notes -->
+            {% if order.notes %}
+            <div class="info-card" style="margin-top: 1.5rem;">
+                <span class="info-label">Order Notes</span>
+                <div class="info-value">{{ order.notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Customer Info -->
+        <div class="card">
+            <h3 style="margin-top: 0; margin-bottom: 1.25rem;">Customer Information</h3>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem;">
+                    {{ order.user.username|first|upper }}
+                </div>
+                <div>
+                    <div style="font-weight: 700;">{{ order.user.get_full_name|default:order.user.username }}</div>
+                    <div style="font-size: 0.8125rem; color: var(--text-muted);">{{ order.user.email }}</div>
+                </div>
+            </div>
+            <div class="info-card">
+                <span class="info-label">Delivery Address</span>
+                <div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 1rem;">
+                    <i data-lucide="map-pin" style="width: 16px; height: 16px; color: #64748b; flex-shrink: 0;"></i>
+                    <div class="info-value">{{ order.delivery_address|default:"Address not specified" }}</div>
+                </div>
+                <span class="info-label">Contact Information</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <i data-lucide="phone" style="width: 16px; height: 16px; color: #64748b;"></i>
+                    <div class="info-value">{{ order.customer_phone|default:"Phone not provided" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Meta Information -->
+        <div class="card">
+            <h3 style="margin-top: 0; margin-bottom: 1.25rem;">Order Information</h3>
+            <div class="info-card">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <span class="info-label">Order ID</span>
+                        <div class="info-value">#{{ order.id }}</div>
+                    </div>
+                    <div>
+                        <span class="info-label">Order Date</span>
+                        <div class="info-value">{{ order.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    <div>
+                        <span class="info-label">Payment Method</span>
+                        <div class="info-value">
+                            {% if order.payment_method == 'cash' %}
+                            <i data-lucide="dollar-sign" style="width: 12px; height: 12px;"></i> Cash on Delivery
+                            {% else %}
+                            <i data-lucide="credit-card" style="width: 12px; height: 12px;"></i> {{ order.payment_method|title }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="info-label">Payment Status</span>
+                        <div class="info-value">
+                            {% if order.is_paid %}
+                            <span style="color: #10b981;">Paid</span>
+                            {% else %}
+                            <span style="color: #ef4444;">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="margin-top: 1.5rem;">
+                <div style="display: flex; gap: 10px;">
+                    <a href="{% url 'dashboard' %}" class="action-btn" style="background: linear-gradient(135deg, #94a3b8, #64748b); text-decoration: none;">
+                        <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Order Modal -->
+<div id="rejectModal" class="reject-modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 1rem;">Reject Order #{{ order.id }}</h3>
+        <p style="margin-bottom: 1rem; color: #64748b;">Please provide a reason for rejecting this order:</p>
+
+        <div class="quick-reasons">
+            <button type="button" class="quick-reason-btn" onclick="setRejectReason('Out of stock')">Out of stock</button>
+            <button type="button" class="quick-reason-btn" onclick="setRejectReason('Customer request')">Customer request</button>
+            <button type="button" class="quick-reason-btn" onclick="setRejectReason('Delivery area not serviceable')">Delivery area not serviceable</button>
+            <button type="button" class="quick-reason-btn" onclick="setRejectReason('Payment issue')">Payment issue</button>
+            <button type="button" class="quick-reason-btn" onclick="setRejectReason('Other')">Other</button>
+        </div>
+
+        <textarea id="rejectReason"
+                  placeholder="Enter rejection reason..."
+                  rows="3"
+                  style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 1rem;"></textarea>
+
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+            <button onclick="closeRejectModal()"
+                    class="action-btn"
+                    style="background: linear-gradient(135deg, #94a3b8, #64748b); flex: 1;">
+                Cancel
+            </button>
+            <button onclick="confirmRejectOrder()"
+                    class="action-btn btn-cancel"
+                    style="flex: 1;">
+                <i data-lucide="ban" style="width: 16px; height: 16px;"></i>
+                Confirm Reject
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global variables for reject modal
+    let currentRejectOrderId = null;
+    let currentRejectUserId = null;
+
+    const steps = ['placed', 'accepted', 'preparing', 'out_for_delivery', 'delivered'];
+
+    function updateStepper(status) {
+        const statusEl = document.getElementById('text-status');
+        if (statusEl) {
+            const statusText = status.replace(/_/g, ' ').toUpperCase();
+            let statusIcon = 'clock';
+            let statusClass = 'status-confirmed';
+
+            switch(status.toLowerCase()) {
+                case 'delivered':
+                    statusIcon = 'check-circle';
+                    statusClass = 'status-delivered';
+                    break;
+                case 'cancelled':
+                case 'rejected':
+                    statusIcon = 'x-circle';
+                    statusClass = 'status-rejected';
+                    break;
+                case 'out_for_delivery':
+                    statusIcon = 'package';
+                    statusClass = 'status-on-the-way';
+                    break;
+                case 'preparing':
+                    statusIcon = 'cooking-pot';
+                    statusClass = 'status-prepared';
+                    break;
+                case 'accepted':
+                    statusIcon = 'check';
+                    statusClass = 'status-confirmed';
+                    break;
+            }
+
+            statusEl.className = `status-badge ${statusClass}`;
+            statusEl.style.padding = '0.5rem 1rem';
+            statusEl.style.fontSize = '0.875rem';
+            statusEl.innerHTML = `<i data-lucide="${statusIcon}" style="width: 16px; height: 16px;"></i> ${statusText}`;
+            lucide.createIcons();
+        }
+
+        const currentStatus = status.toLowerCase().replace(/\s+/g, '_');
+        let isActiveFound = false;
+
+        steps.forEach((step) => {
+            const stepEl = document.getElementById('step-' + step);
+            if (!stepEl) return;
+            stepEl.classList.remove('active', 'completed');
+
+            if (step === currentStatus) {
+                stepEl.classList.add('active');
+                isActiveFound = true;
+            } else if (!isActiveFound) {
+                stepEl.classList.add('completed');
+            }
+        });
+    }
+
+    // ========== REJECT ORDER SYSTEM ==========
+    function rejectOrderWithMessage(orderId, userId) {
+        const currentStatus = "{{ order.status }}";
+
+        if (currentStatus === 'Delivered' || currentStatus === 'delivered') {
+            alert('❌ This order has already been delivered and cannot be rejected!');
+            return;
+        }
+
+        currentRejectOrderId = orderId;
+        currentRejectUserId = userId;
+
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectModal').style.display = 'flex';
+        document.getElementById('rejectReason').focus();
+    }
+
+    function setRejectReason(reason) {
+        document.getElementById('rejectReason').value = reason;
+    }
+
+    function closeRejectModal() {
+        document.getElementById('rejectModal').style.display = 'none';
+        currentRejectOrderId = null;
+        currentRejectUserId = null;
+    }
+
+    function confirmRejectOrder() {
+        const reason = document.getElementById('rejectReason').value.trim();
+
+        if (!reason) {
+            alert('Please provide a rejection reason!');
+            document.getElementById('rejectReason').focus();
+            return;
+        }
+
+        if (!currentRejectOrderId || !currentRejectUserId) {
+            alert('Error: Order information not found!');
+            closeRejectModal();
+            return;
+        }
+
+        if (confirm(`Are you sure you want to reject Order #${currentRejectOrderId}?\n\nReason: ${reason}`)) {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = "{% url 'update_order_status' order.id %}";
+
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            form.appendChild(csrfToken);
+
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'status';
+            statusInput.value = 'rejected';
+            form.appendChild(statusInput);
+
+            const nextInput = document.createElement('input');
+            nextInput.type = 'hidden';
+            nextInput.name = 'next';
+            nextInput.value = '{{ request.path }}';
+            form.appendChild(nextInput);
+
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason;
+            form.appendChild(reasonInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // Initialize status
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStepper("{{ order.status }}");
+        lucide.createIcons();
+
+        // Add confirmation for action button
+        const actionBtn = document.querySelector('.action-btn:not(.btn-cancel)');
+        if (actionBtn) {
+            actionBtn.addEventListener('click', function(e) {
+                const statusText = this.innerText;
+                if (!confirm(`Are you sure you want to "${statusText}"?`)) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+
+    // Real-time updates via WebSocket
+    const orderId = "{{ order.id }}";
+    try {
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const socket = new WebSocket(protocol + window.location.host + '/ws/status/food/' + orderId + '/');
+
+        socket.onmessage = function (e) {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.status) {
+                    updateStepper(data.status);
+
+                    // Refresh page if status is delivered or cancelled
+                    if (data.status === 'delivered' || data.status === 'cancelled' || data.status === 'rejected') {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+            }
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+
+        socket.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
+    } catch (error) {
+        console.log('WebSocket not available or not configured');
+    }
+</script>
+{% endblock %}

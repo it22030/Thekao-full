@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent px-0">
+            <li class="breadcrumb-item"><a href="{% url 'mall_home' %}">Mall</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ shop.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="jumbotron p-4 p-md-5 rounded bg-dark text-white mb-4"
+        style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ shop.image }}') center/cover;">
+        <div class="col-md-8 px-0">
+            <h1 class="display-4 font-italic">{{ shop.name }}</h1>
+            <p class="lead my-3">{{ shop.description }}</p>
+            <p class="mb-0"><i class="fas fa-map-marker-alt mr-2"></i> {{ shop.address }}</p>
+        </div>
+    </div>
+
+    <h3 class="mb-4">Products</h3>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm h-100">
+                {% if product.image %}
+                <img src="{{ product.image }}" class="card-img-top" alt="{{ product.name }}"
+                    style="height: 180px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                    style="height: 180px;">
+                    <i class="fas fa-box fa-2x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title">{{ product.name }}</h6>
+                    <div class="mt-auto">
+                        <h5 class="text-primary font-weight-bold">৳{{ product.price }}</h5>
+                        <form action="{% url 'add_to_mall_cart' product.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary btn-block mt-2">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <p>No products available in this shop.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

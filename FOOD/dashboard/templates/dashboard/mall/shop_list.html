@@ -1,0 +1,50 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Mall / Shops{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Shop Name</th>
+                    <th>Image</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for shop in shops %}
+                <tr>
+                    <td>
+                        <div class="font-weight-bold">{{ shop.name }}</div>
+                        <div class="small text-muted">{{ shop.description|truncatechars:30 }}</div>
+                    </td>
+                    <td>
+                        {% if shop.image %}
+                        <img src="{{ shop.image }}" alt="{{ shop.name }}"
+                            style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+                        {% else %}
+                        <div
+                            style="width: 40px; height: 40px; border-radius: 8px; background: #eee; display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="image" style="width: 16px; height: 16px; color: #999;"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>{{ shop.address }}</td>
+                    <td>
+                        <a href="#" class="btn-sm"
+                            style="color: var(--primary); text-decoration: none; font-weight: 600;">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">No shops found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

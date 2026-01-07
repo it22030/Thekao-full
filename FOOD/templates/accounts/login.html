@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome Back - FastEats{% endblock %}
+
+{% block content %}
+<style>
+    .auth-container {
+        min-height: calc(100vh - var(--header-height) - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1.5rem;
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: 32px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        padding: 3rem;
+        max-width: 480px;
+        width: 100%;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .auth-header h1 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        color: var(--secondary);
+        letter-spacing: -0.02em;
+    }
+
+    .auth-header p {
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--secondary);
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        border: 2px solid #E5E7EB;
+        border-radius: 14px;
+        box-sizing: border-box;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        background: #F9FAFB;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(215, 15, 100, 0.1);
+    }
+
+    .form-error {
+        color: #EF4444;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #F3F4F6;
+        color: var(--text-muted);
+    }
+
+    .auth-footer a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: opacity 0.2s;
+    }
+
+    .auth-footer a:hover {
+        opacity: 0.8;
+    }
+
+    ul.errorlist {
+        padding: 0;
+        list-style: none;
+        margin: 0;
+    }
+</style>
+
+<div class="auth-container animate-fade-in">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Welcome Back</h1>
+            <p>Sign in to continue your culinary journey</p>
+        </div>
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+
+            {% if request.GET.next %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
+
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+
+                {% if field.errors %}
+                <div class="form-error">
+                    <i data-lucide="alert-circle" style="width: 14px;"></i>
+                    {{ field.errors|first }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.05rem; margin-top: 1rem;">
+                Sign In <i data-lucide="arrow-right" style="width: 18px;"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="{% url 'register' %}">Create one now</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Style Django form fields */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        border: 2px solid #E5E7EB;
+        border-radius: 14px;
+        box-sizing: border-box;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        background: #F9FAFB;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="email"]:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(215, 15, 100, 0.1);
+    }
+</style>
+{% endblock %}
